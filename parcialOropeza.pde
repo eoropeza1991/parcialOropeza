@@ -6,8 +6,8 @@ boolean juegoIniciado = false;
 
 PImage fondo;
 PImage imgMoneda;
-ArrayList<Moneda> monedas;
-Spawner spawner;
+ArrayList<GameObject> objetos;
+ArrayList<GameObject> objetosAEliminar;
 int contador;
 
 void setup() {
@@ -15,8 +15,9 @@ void setup() {
   fondo = loadImage("fondo.png");
   imgMoneda = loadImage("moneda.png");
 
-  monedas = new ArrayList<Moneda>();
-  spawner = new Spawner(width/2, 2, imgMoneda);
+  objetos = new ArrayList<GameObject>();
+  objetosAEliminar = new ArrayList<GameObject>();
+  objetos.add(new Spawner(width/2, 2, imgMoneda));
   contador = 0;
 
   cp5 = new ControlP5(this);
@@ -32,31 +33,24 @@ void draw() {
   background(fondo);
 
   if (juegoIniciado) {
-    spawner.update();
-    spawner.display();
+    for (int i = 0; i < objetos.size(); i++) {
+      GameObject obj = objetos.get(i);
+      obj.update();
+      obj.display();
 
-    //  crear monedas
-    if (frameCount % 60 == 0) {
-      spawner.setX(random(width)); // Cambiar la posición del spawner
-      float offScreenY = -50; // Posición fuera de la pantalla
-      monedas.add(new Moneda(spawner.getX(), offScreenY, 2, imgMoneda)); // Generar moneda fuera de la pantalla
-    }
-
-    // que se muestren y muevan las monedas
-    for (int i = monedas.size() - 1; i >= 0; i--) {
-      Moneda moneda = monedas.get(i);
-      moneda.fall();
-      moneda.display();
-
-     // borrar las monedas que lleguen al piso
-      if (moneda.getY() > height) {
-        monedas.remove(i);
-        contador++;
+      if (obj instanceof Spawner) {
+        Spawner spawner = (Spawner) obj;
+        spawner.spawn();
       }
     }
+
+
+    for (GameObject obj : objetosAEliminar) {
+      objetos.remove(obj);
+    }
+    objetosAEliminar.clear();
   }
 
-  // contador de monedas
   fill(255);
   textSize(24);
   text("Contador: " + contador, 10, 30);
@@ -74,24 +68,26 @@ void terminar() {
   }
 }
 
-class Moneda {
+class GameObject {
   protected float x, y;
-  protected float velocidad;
   protected PImage imagen;
 
-  public Moneda(float x, float y, float velocidad, PImage imagen) {
+  public GameObject(float x, float y, PImage imagen) {
     this.x = x;
     this.y = y;
-    this.velocidad = velocidad;
     this.imagen = imagen;
   }
 
-  public void fall() {
-    y += velocidad;
+  public void update() {
+
   }
 
   public void display() {
-    image(imagen, x, y);
+
+  }
+
+  public float getX() {
+    return x;
   }
 
   public float getY() {
@@ -99,30 +95,35 @@ class Moneda {
   }
 }
 
-class Spawner {
-  private float x;
-  private float velocidad;
-  private PImage imagen;
+class Moneda extends GameObject {
+  protected float velocidad;
 
-  public Spawner(float x, float velocidad, PImage imagen) {
-    this.x = x;
+  public Moneda(float x, float y, float velocidad, PImage imagen) {
+    super(x, y, imagen);
     this.velocidad = velocidad;
-    this.imagen = imagen;
   }
 
-  public void setX(float x) {
-    this.x = x;
-  }
-
-  public float getX() {
-    return x;
-  }
-
+  @Override
   public void update() {
-    // Actualizar spawner si es necesario
+    y += velocidad;
   }
 
+  @Override
   public void display() {
-    // Mostrar spawner si es necesario
+    image(imagen, x, y);
+  }
+}
+
+class Spawner extends GameObject {
+  public Spawner(float x, float y, PImage imagen) {
+    super(x, y, imagen);
+  }
+
+  public void spawn() {
+    if (frameCount % 60 == 0) {
+      float offScreenY = -50; // Posición fuera de la pantalla
+      float randomX = random(width); // Posición aleatoria en el eje x
+      objetos.add(new Moneda(randomX, offScreenY, 2, imagen)); // Generar moneda fuera de la pantalla
+    }
   }
 }
