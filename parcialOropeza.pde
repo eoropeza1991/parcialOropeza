@@ -44,7 +44,19 @@ void draw() {
       }
     }
 
+    // Eliminar monedas que llegan al suelo y actualizar contador
+    for (int i = objetos.size() - 1; i >= 0; i--) {
+      GameObject obj = objetos.get(i);
+      if (obj instanceof Moneda) {
+        Moneda moneda = (Moneda) obj;
+        if (moneda.getY() > height) {
+          contador++;
+          objetosAEliminar.add(moneda);
+        }
+      }
+    }
 
+    // Eliminar objetos que llegaron al suelo
     for (GameObject obj : objetosAEliminar) {
       objetos.remove(obj);
     }
